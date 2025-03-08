@@ -12,7 +12,7 @@
   </style>
 </head>
 <body>
-  <h1>Formulaire CRM (mode no-cors)</h1>
+  <h1>Formulaire CRM</h1>
   <form id="crmForm">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
@@ -68,7 +68,7 @@
       .then(() => {
         // En mode no-cors, on ne peut pas lire la réponse.
         // On suppose donc que ça a fonctionné si aucune erreur réseau n’est survenue.
-        document.getElementById('resultat').innerHTML = "Données envoyées avec succès (mode no-cors) !";
+        document.getElementById('resultat').innerHTML = "Données envoyées avec succès !";
         document.getElementById('crmForm').reset();
       })
       .catch(error => {
