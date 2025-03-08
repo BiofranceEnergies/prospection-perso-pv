@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CRM avec Google Sheets</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    form { margin-top: 20px; }
+    label { display: block; margin: 10px 0 5px; }
+    input { padding: 5px; width: 300px; }
+    button { padding: 8px 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Formulaire CRM</h1>
+  <form id="crmForm">
+    <label for="nom">Nom :</label>
+    <input type="text" id="nom" name="nom" required>
+
+    <label for="adresse_actuelle">Adresse actuelle :</label>
+    <input type="text" id="adresse_actuelle" name="adresse_actuelle" required>
+
+    <label for="cp_actuel">CP actuel :</label>
+    <input type="text" id="cp_actuel" name="cp_actuel" required>
+
+    <label for="ville_actuelle">Ville actuelle :</label>
+    <input type="text" id="ville_actuelle" name="ville_actuelle" required>
+
+    <label for="cp_construction">CP lieu de construction :</label>
+    <input type="text" id="cp_construction" name="cp_construction" required>
+
+    <label for="ville_construction">Ville lieu de construction :</label>
+    <input type="text" id="ville_construction" name="ville_construction" required>
+
+    <label for="surface">Surface (m²) :</label>
+    <input type="number" step="0.01" id="surface" name="surface" required>
+
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <div id="resultat"></div>
+
+  <script>
+    // Remplacez cette URL par celle générée lors du déploiement de votre Apps Script (sans point-virgule à la fin)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
+
+    document.getElementById('crmForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const data = {
+        nom: document.getElementById('nom').value,
+        adresse_actuelle: document.getElementById('adresse_actuelle').value,
+        cp_actuel: document.getElementById('cp_actuel').value,
+        ville_actuelle: document.getElementById('ville_actuelle').value,
+        cp_construction: document.getElementById('cp_construction').value,
+        ville_construction: document.getElementById('ville_construction').value,
+        surface: document.getElementById('surface').value
+      };
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(response => {
+        document.getElementById('resultat').innerHTML = "Données envoyées avec succès !";
+        document.getElementById('crmForm').reset();
+      })
+      .catch(error => {
+        document.getElementById('resultat').innerHTML = "Erreur lors de l'envoi : " + error;
+      });
+    });
+  </script>
+</body>
+</html>
