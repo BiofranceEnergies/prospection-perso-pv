@@ -10,6 +10,8 @@
     input { padding: 5px; width: 300px; }
     button { padding: 8px 12px; margin-top: 10px; }
   </style>
+  <!-- Intégration de l'API Google Maps Places -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places"></script>
 </head>
 <body>
   <h1>Formulaire CRM</h1>
@@ -41,9 +43,40 @@
   <div id="resultat"></div>
 
   <script>
-    // Remplace cette URL par celle générée lors du déploiement de ton Apps Script
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec/exec";
+    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle"
+    var autocomplete = new google.maps.places.Autocomplete(document.getElementById('adresse_actuelle'), {
+      types: ['geocode']
+    });
 
+    autocomplete.addListener('place_changed', function() {
+      var place = autocomplete.getPlace();
+      var postalCode = "";
+      var city = "";
+
+      if (place.address_components) {
+        // Parcours des composants de l'adresse pour trouver le code postal et la ville
+        for (var i = 0; i < place.address_components.length; i++) {
+          var component = place.address_components[i];
+          var componentType = component.types[0];
+
+          if (componentType === 'postal_code') {
+            postalCode = component.long_name;
+          }
+          if (componentType === 'locality') {
+            city = component.long_name;
+          }
+        }
+      }
+
+      // Remplissage automatique des champs "CP actuel" et "Ville actuelle"
+      document.getElementById('cp_actuel').value = postalCode;
+      document.getElementById('ville_actuelle').value = city;
+    });
+
+    // URL de votre Apps Script pour l'envoi des données vers Google Sheets
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
+
+    // Envoi du formulaire
     document.getElementById('crmForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -59,15 +92,14 @@
 
       fetch(scriptURL, {
         method: 'POST',
-        mode: 'no-cors',          // on ignore la politique CORS
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       })
-      .then(() => {
-        // En mode no-cors, on ne peut pas lire la réponse.
-        // On suppose donc que ça a fonctionné si aucune erreur réseau n’est survenue.
+      .then(response => response.json())
+      .then(response => {
         document.getElementById('resultat').innerHTML = "Données envoyées avec succès !";
         document.getElementById('crmForm').reset();
       })
