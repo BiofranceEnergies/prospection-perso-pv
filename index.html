@@ -29,11 +29,12 @@
     <input type="text" id="ville_actuelle" name="ville_actuelle" required>
 
     <label for="cp_construction">CP lieu de construction :</label>
-    <input type="text" id="cp_construction" name="cp_construction" required>
+    <!-- Ajout d'un placeholder pour inviter à taper le code postal -->
+    <input type="text" id="cp_construction" name="cp_construction" placeholder="Taper le code postal" required>
 
     <label for="ville_construction">Ville lieu de construction :</label>
-    <!-- Ajout d'un datalist pour proposer les villes -->
-    <input type="text" id="ville_construction" name="ville_construction" list="cities_list" required>
+    <!-- Le champ utilise un datalist et a un placeholder -->
+    <input type="text" id="ville_construction" name="ville_construction" list="cities_list" placeholder="Sélectionnez une ville" required>
     <datalist id="cities_list"></datalist>
 
     <label for="surface">Surface (m²) :</label>
@@ -45,7 +46,7 @@
   <div id="resultat"></div>
 
   <script>
-    // 1. Autocomplétion pour "Adresse actuelle" (uniquement pour la France)
+    // 1. Autocomplétion pour "Adresse actuelle" (France uniquement)
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -88,14 +89,13 @@
       document.getElementById('ville_actuelle').value = city;
     });
 
-    // 2. Création d'un Geocoder pour rechercher les villes par CP
+    // 2. Geocoder pour rechercher les villes correspondant au CP lieu de construction
     var geocoder = new google.maps.Geocoder();
 
-    // Dès que le champ "CP lieu de construction" perd le focus,
-    // on recherche les villes correspondantes et on alimente le datalist.
     document.getElementById('cp_construction').addEventListener('blur', function() {
       var cp = this.value.trim();
       if (cp) {
+        // On effectue une recherche avec le code postal et "France"
         geocoder.geocode({ address: cp + ", France" }, function(results, status) {
           if (status === google.maps.GeocoderStatus.OK) {
             var cities = new Set();
