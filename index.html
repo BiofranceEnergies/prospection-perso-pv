@@ -45,24 +45,36 @@
 
   <script>
     // Autocomplétion pour l'adresse actuelle
-    var autocomplete = new google.maps.places.Autocomplete(
-      document.getElementById('adresse_actuelle'),
-      { types: ['geocode'], componentRestrictions: { country: 'fr' } }
-    );
+   var service = new google.maps.places.AutocompleteService();
+document.getElementById('cp_construction').addEventListener('input', function() {
+    var cp = this.value.trim();
+    if (cp.length === 5) {
+        service.getPlacePredictions({
+            input: cp + ", France",
+            types: ['(regions)'],
+            componentRestrictions: { country: 'fr' }
+        }, function(predictions, status) {
+            console.log("Places API status:", status);
+            console.log("Predictions:", predictions);
 
-    autocomplete.addListener('place_changed', function() {
-      var place = autocomplete.getPlace();
-      var streetNumber = "", route = "", postalCode = "", city = "";
+            var dataList = document.getElementById('cities_list');
+            dataList.innerHTML = "";
 
-      if (place.address_components) {
-        place.address_components.forEach(component => {
-          var types = component.types;
-          if (types.includes('street_number')) streetNumber = component.long_name;
-          if (types.includes('route')) route = component.long_name;
-          if (types.includes('postal_code')) postalCode = component.long_name;
-          if (types.includes('locality')) city = component.long_name;
+            if (status === google.maps.places.PlacesServiceStatus.OK && predictions.length > 0) {
+                predictions.forEach(prediction => {
+                    var option = document.createElement("option");
+                    option.value = prediction.description.split(",")[0]; // Prendre uniquement la ville
+                    dataList.appendChild(option);
+                });
+            } else {
+                var option = document.createElement("option");
+                option.value = "Aucune ville trouvée";
+                dataList.appendChild(option);
+            }
         });
-      }
+    }
+});
+
 
       document.getElementById('adresse_actuelle').value = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('cp_actuel').value = postalCode;
