@@ -10,11 +10,12 @@
     input { padding: 5px; width: 300px; }
     button { padding: 8px 12px; margin-top: 10px; }
   </style>
-  <!-- Chargement de l'API Google Maps Places -->
+  <!-- Chargement de l'API Google Maps Places + Geocoding -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places"></script>
 </head>
 <body>
   <h1>Formulaire CRM</h1>
+
   <form id="crmForm">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
@@ -29,10 +30,9 @@
     <input type="text" id="ville_actuelle" name="ville_actuelle" required>
 
     <label for="cp_construction">CP lieu de construction :</label>
-    <input type="text" id="cp_construction" name="cp_construction" placeholder="Taper le code postal" required>
+    <input type="text" id="cp_construction" name="cp_construction" placeholder="Ex: 75001" required>
 
     <label for="ville_construction">Ville lieu de construction :</label>
-    <!-- Utilisation d'un datalist pour proposer les villes trouvées -->
     <input type="text" id="ville_construction" name="ville_construction" list="cities_list" placeholder="Sélectionnez une ville" required>
     <datalist id="cities_list"></datalist>
 
@@ -45,7 +45,9 @@
   <div id="resultat"></div>
 
   <script>
-    // 1. Autocomplétion pour "Adresse actuelle" (France uniquement)
+    // =============================
+    // 1) Autocomplétion "Adresse actuelle" (limite: France)
+    // =============================
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -62,104 +64,24 @@
       var city = "";
 
       if (place.address_components) {
-        for (var i = 0; i < place.address_components.length; i++) {
-          var component = place.address_components[i];
+        place.address_components.forEach(function(component) {
           var types = component.types;
-          if (types.indexOf('street_number') > -1) {
+          if (types.includes('street_number')) {
             streetNumber = component.long_name;
           }
-          if (types.indexOf('route') > -1) {
+          if (types.includes('route')) {
             route = component.long_name;
           }
-          if (types.indexOf('postal_code') > -1) {
+          if (types.includes('postal_code')) {
             postalCode = component.long_name;
           }
-          if (types.indexOf('locality') > -1) {
+          if (types.includes('locality')) {
             city = component.long_name;
-          }
-        }
-      }
-      
-      var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
-      document.getElementById('adresse_actuelle').value = formattedAddress.trim();
-      document.getElementById('cp_actuel').value = postalCode;
-      document.getElementById('ville_actuelle').value = city;
-    });
-
-    // 2. Recherche de villes pour le CP lieu de construction
-    var geocoder = new google.maps.Geocoder();
-
-    // Déclenche la recherche quand le champ contient 5 chiffres
-    document.getElementById('cp_construction').addEventListener('input', function() {
-      var cp = this.value.trim();
-      console.log("CP saisi :", cp);
-      if (cp.length === 5) {
-        geocoder.geocode({ 
-          components: { postal_code: cp, country: 'FR' }
-        }, function(results, status) {
-          console.log("Status Geocoder :", status);
-          console.log("Résultats Geocoder :", results);
-          if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
-            var cities = new Set();
-            results.forEach(function(result) {
-              result.address_components.forEach(function(component) {
-                if (component.types.indexOf('locality') > -1 || 
-                    component.types.indexOf('postal_town') > -1 || 
-                    component.types.indexOf('administrative_area_level_2') > -1) {
-                  cities.add(component.long_name);
-                }
-              });
-            });
-            var dataList = document.getElementById('cities_list');
-            dataList.innerHTML = "";
-            if (cities.size === 0) {
-              var option = document.createElement("option");
-              option.value = "Aucune ville trouvée";
-              dataList.appendChild(option);
-            } else {
-              cities.forEach(function(city) {
-                var option = document.createElement("option");
-                option.value = city;
-                dataList.appendChild(option);
-              });
-            }
-          } else {
-            console.error("Aucun résultat trouvé pour le CP '" + cp + "' - Status:", status);
           }
         });
       }
-    });
-
-    // 3. Envoi du formulaire via Apps Script
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
-    document.getElementById('crmForm').addEventListener('submit', function(e) {
-      e.preventDefault();
       
-      const data = {
-        nom: document.getElementById('nom').value,
-        adresse_actuelle: document.getElementById('adresse_actuelle').value,
-        cp_actuel: document.getElementById('cp_actuel').value,
-        ville_actuelle: document.getElementById('ville_actuelle').value,
-        cp_construction: document.getElementById('cp_construction').value,
-        ville_construction: document.getElementById('ville_construction').value,
-        surface: document.getElementById('surface').value
-      };
-
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(response => {
-        document.getElementById('resultat').innerHTML = "Données envoyées avec succès !";
-        document.getElementById('crmForm').reset();
-      })
-      .catch(error => {
-        document.getElementById('resultat').innerHTML = "Erreur lors de l'envoi : " + error;
-      });
-    });
-  </script>
-</body>
-</html>
+      // Reconstruire l'adresse avec juste numéro + rue
+      var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
+      document.getElementById('adresse_actuelle').value = formattedAddress.trim();
+      document.getElementById(
