@@ -7,11 +7,11 @@
     body { font-family: Arial, sans-serif; margin: 20px; }
     form { margin-top: 20px; }
     label { display: block; margin: 10px 0 5px; }
-    input, select { padding: 5px; width: 300px; }
+    input { padding: 5px; width: 300px; }
     button { padding: 8px 12px; margin-top: 10px; }
   </style>
-  <!-- Charge l'API Google Maps avec Places -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+  <!-- Chargement de l'API Google Maps Places -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places"></script>
 </head>
 <body>
   <h1>Formulaire CRM</h1>
@@ -29,12 +29,10 @@
     <input type="text" id="ville_actuelle" name="ville_actuelle" required>
 
     <label for="cp_construction">CP lieu de construction :</label>
-    <input type="text" id="cp_construction" name="cp_construction" placeholder="Ex: 75001" required>
+    <input type="text" id="cp_construction" name="cp_construction" required>
 
     <label for="ville_construction">Ville lieu de construction :</label>
-    <select id="ville_construction" name="ville_construction" required>
-      <option value="">Sélectionnez une ville</option>
-    </select>
+    <input type="text" id="ville_construction" name="ville_construction" required>
 
     <label for="surface">Surface (m²) :</label>
     <input type="number" step="0.01" id="surface" name="surface" required>
@@ -45,9 +43,7 @@
   <div id="resultat"></div>
 
   <script>
-    // ----------------------------------------
-    // A) Autocomplétion pour "Adresse actuelle"
-    // ----------------------------------------
+    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle" en limitant aux adresses en France
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -68,68 +64,32 @@
           var component = place.address_components[i];
           var types = component.types;
 
-          if (types.includes('street_number')) {
+          if (types.indexOf('street_number') > -1) {
             streetNumber = component.long_name;
           }
-          if (types.includes('route')) {
+          if (types.indexOf('route') > -1) {
             route = component.long_name;
           }
-          if (types.includes('postal_code')) {
+          if (types.indexOf('postal_code') > -1) {
             postalCode = component.long_name;
           }
-          if (types.includes('locality')) {
+          if (types.indexOf('locality') > -1) {
             city = component.long_name;
           }
         }
       }
       
-      // Reconstruction de l'adresse avec le numéro et la rue
+      // Reconstruction de l'adresse uniquement avec le numéro et la rue
       var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
       document.getElementById('ville_actuelle').value = city;
     });
 
-    // ----------------------------------------
-    // B) Recherche de villes pour "CP lieu de construction" avec Places API
-    // ----------------------------------------
-    var service = new google.maps.places.AutocompleteService();
-
-    document.getElementById('cp_construction').addEventListener('input', function() {
-      var cp = this.value.trim();
-      if (cp.length === 5) {
-        service.getPlacePredictions({
-          input: cp + ", France",
-          types: ['(regions)'],
-          componentRestrictions: { country: 'fr' }
-        }, function(predictions, status) {
-          console.log("Places API status:", status);
-          console.log("Predictions:", predictions);
-
-          var select = document.getElementById('ville_construction');
-          select.innerHTML = '<option value="">Sélectionnez une ville</option>';
-
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions.length > 0) {
-            predictions.forEach(prediction => {
-              var option = document.createElement("option");
-              option.value = prediction.description.split(",")[0]; // Prendre uniquement la ville
-              option.textContent = prediction.description.split(",")[0];
-              select.appendChild(option);
-            });
-          } else {
-            var option = document.createElement("option");
-            option.value = "Aucune ville trouvée";
-            option.textContent = "Aucune ville trouvée";
-            select.appendChild(option);
-          }
-        });
-      }
-    });
-
-    // ----------------------------------------
-    // C) Envoi du formulaire vers Google Sheets
-    // ----------------------------------------
+    // URL de votre Apps Script pour l'envoi des données vers Google Sheets
     const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
+
+    // Envoi du formulaire
     document.getElementById('crmForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
