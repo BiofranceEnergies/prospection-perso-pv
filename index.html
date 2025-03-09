@@ -10,7 +10,7 @@
     input { padding: 5px; width: 300px; }
     button { padding: 8px 12px; margin-top: 10px; }
   </style>
-  <!-- Intégration de l'API Google Maps Places -->
+  <!-- Chargement de l'API Google Maps Places -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places"></script>
 </head>
 <body>
@@ -44,31 +44,42 @@
 
   <script>
     // Initialisation de l'autocomplétion pour le champ "adresse_actuelle"
-    var autocomplete = new google.maps.places.Autocomplete(document.getElementById('adresse_actuelle'), {
-      types: ['geocode']
-    });
+    var autocomplete = new google.maps.places.Autocomplete(
+      document.getElementById('adresse_actuelle'),
+      { types: ['geocode'] }
+    );
 
     autocomplete.addListener('place_changed', function() {
       var place = autocomplete.getPlace();
+      var streetNumber = "";
+      var route = "";
       var postalCode = "";
       var city = "";
 
       if (place.address_components) {
-        // Parcours des composants de l'adresse pour trouver le code postal et la ville
+        // Parcours des composants pour extraire les informations désirées
         for (var i = 0; i < place.address_components.length; i++) {
           var component = place.address_components[i];
-          var componentType = component.types[0];
+          var types = component.types;
 
-          if (componentType === 'postal_code') {
+          if (types.indexOf('street_number') > -1) {
+            streetNumber = component.long_name;
+          }
+          if (types.indexOf('route') > -1) {
+            route = component.long_name;
+          }
+          if (types.indexOf('postal_code') > -1) {
             postalCode = component.long_name;
           }
-          if (componentType === 'locality') {
+          if (types.indexOf('locality') > -1) {
             city = component.long_name;
           }
         }
       }
-
-      // Remplissage automatique des champs "CP actuel" et "Ville actuelle"
+      
+      // Reconstitution de l'adresse uniquement avec le numéro et la rue
+      var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
+      document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
       document.getElementById('ville_actuelle').value = city;
     });
@@ -93,9 +104,7 @@
       fetch(scriptURL, {
         method: 'POST',
         mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
       .then(response => response.json())
