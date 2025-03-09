@@ -45,7 +45,7 @@
   <div id="resultat"></div>
 
   <script>
-    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle" (uniquement pour la France)
+    // Autocomplétion pour "Adresse actuelle" limitée à la France
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -81,7 +81,7 @@
         }
       }
       
-      // Reconstruction de l'adresse avec uniquement le numéro et la rue
+      // Reconstruction de l'adresse uniquement avec le numéro et la rue
       var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
@@ -91,18 +91,30 @@
     // Instanciation du Geocoder
     var geocoder = new google.maps.Geocoder();
 
-    // Lorsque le champ "CP lieu de construction" perd le focus, on recherche les villes correspondantes
+    // Lorsqu'on quitte le champ "CP lieu de construction", on recherche les villes correspondantes
     document.getElementById('cp_construction').addEventListener('blur', function() {
       var cp = this.value.trim();
-      if(cp) {
-        geocoder.geocode({ address: cp + ", France" }, function(results, status) {
+      if (cp) {
+        // Utilisation de componentRestrictions pour une recherche précise
+        geocoder.geocode({ 
+          componentRestrictions: { country: 'fr', postalCode: cp } 
+        }, function(results, status) {
           if (status === google.maps.GeocoderStatus.OK) {
             var cities = new Set();
             results.forEach(function(result) {
               result.address_components.forEach(function(component) {
-                // On récupère le composant "locality" pour les villes
-                if (component.types.indexOf("locality") > -1) {
-                  cities.add(component.long_name);
+                var types = component.types;
+                var cityName = "";
+                // Vérification de plusieurs types pour la ville
+                if (types.indexOf("locality") > -1) {
+                  cityName = component.long_name;
+                } else if (!cityName && types.indexOf("postal_town") > -1) {
+                  cityName = component.long_name;
+                } else if (!cityName && types.indexOf("administrative_area_level_2") > -1) {
+                  cityName = component.long_name;
+                }
+                if (cityName) {
+                  cities.add(cityName);
                 }
               });
             });
