@@ -10,15 +10,18 @@
     input { padding: 5px; width: 300px; }
     button { padding: 8px 12px; margin-top: 10px; }
   </style>
-  <!-- Chargement de l'API Google Maps Places -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places"></script>
+  <!-- Charge l'API Google Maps avec Places + Geocoding -->
+  <!-- Remplacez "YOUR_API_KEY" par VOTRE vraie clé (avec facturation et Geocoding activé) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 </head>
 <body>
   <h1>Formulaire CRM</h1>
   <form id="crmForm">
+    <!-- 1) NOM -->
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
 
+    <!-- 2) Adresse actuelle + CP + Ville (autocomplétion) -->
     <label for="adresse_actuelle">Adresse actuelle :</label>
     <input type="text" id="adresse_actuelle" name="adresse_actuelle" required>
 
@@ -28,22 +31,29 @@
     <label for="ville_actuelle">Ville actuelle :</label>
     <input type="text" id="ville_actuelle" name="ville_actuelle" required>
 
+    <!-- 3) CP lieu de construction + Ville lieu de construction (geocoding) -->
     <label for="cp_construction">CP lieu de construction :</label>
-    <input type="text" id="cp_construction" name="cp_construction" required>
+    <input type="text" id="cp_construction" name="cp_construction" placeholder="Ex: 75001" required>
 
     <label for="ville_construction">Ville lieu de construction :</label>
-    <input type="text" id="ville_construction" name="ville_construction" required>
+    <!-- On utilise un datalist pour proposer la/les ville(s) trouvées -->
+    <input type="text" id="ville_construction" name="ville_construction" list="cities_list" placeholder="Sélectionnez une ville" required>
+    <datalist id="cities_list"></datalist>
 
+    <!-- 4) Surface -->
     <label for="surface">Surface (m²) :</label>
     <input type="number" step="0.01" id="surface" name="surface" required>
 
+    <!-- 5) Bouton Envoyer -->
     <button type="submit">Envoyer</button>
   </form>
 
   <div id="resultat"></div>
 
   <script>
-    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle" en limitant aux adresses en France
+    // --------------------------------------------------------------------
+    // A) Autocomplétion "Adresse actuelle" (ne pas modifier)
+    // --------------------------------------------------------------------
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -79,17 +89,73 @@
         }
       }
       
-      // Reconstruction de l'adresse uniquement avec le numéro et la rue
+      // Reconstruit l'adresse avec le numéro et la rue
       var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
       document.getElementById('ville_actuelle').value = city;
     });
 
-    // URL de votre Apps Script pour l'envoi des données vers Google Sheets
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
+    // --------------------------------------------------------------------
+    // B) Recherche de la ville depuis "CP lieu de construction" (Geocoding)
+    // --------------------------------------------------------------------
+    var geocoder = new google.maps.Geocoder();
 
-    // Envoi du formulaire
+    // Quand on tape dans le champ CP (et que ça fait 5 chiffres), on lance la recherche
+    document.getElementById('cp_construction').addEventListener('input', function() {
+      var cp = this.value.trim();
+      // On attend qu'il y ait 5 caractères pour un code postal français
+      if (cp.length === 5) {
+        // Exemple : "75001, France"
+        geocoder.geocode({ address: cp + ", France" }, function(results, status) {
+          if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
+            var cities = new Set();
+
+            // On parcourt tous les résultats
+            results.forEach(function(result) {
+              // Pour chaque résultat, on analyse ses composants
+              result.address_components.forEach(function(component) {
+                var types = component.types;
+                // On récupère "locality", "postal_town" ou "administrative_area_level_2"
+                if (
+                  types.indexOf('locality') > -1 ||
+                  types.indexOf('postal_town') > -1 ||
+                  types.indexOf('administrative_area_level_2') > -1
+                ) {
+                  cities.add(component.long_name);
+                }
+              });
+            });
+
+            // On met à jour le datalist
+            var dataList = document.getElementById('cities_list');
+            dataList.innerHTML = "";
+
+            if (cities.size === 0) {
+              // Aucune ville trouvée
+              var option = document.createElement("option");
+              option.value = "Aucune ville trouvée pour ce CP";
+              dataList.appendChild(option);
+            } else {
+              // On ajoute chaque ville trouvée
+              cities.forEach(function(city) {
+                var option = document.createElement("option");
+                option.value = city;
+                dataList.appendChild(option);
+              });
+            }
+          } else {
+            console.warn("Geocode n'a pas trouvé de résultats pour le CP =", cp, "| status =", status);
+          }
+        });
+      }
+    });
+
+    // --------------------------------------------------------------------
+    // C) Envoi du formulaire vers Google Sheets (ne pas modifier)
+    // --------------------------------------------------------------------
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
+    
     document.getElementById('crmForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
