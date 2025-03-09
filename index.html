@@ -32,7 +32,7 @@
     <input type="text" id="cp_construction" name="cp_construction" placeholder="Taper le code postal" required>
 
     <label for="ville_construction">Ville lieu de construction :</label>
-    <!-- Le datalist permettra d'afficher la liste des villes trouvées -->
+    <!-- Utilisation d'un datalist pour proposer les villes trouvées -->
     <input type="text" id="ville_construction" name="ville_construction" list="cities_list" placeholder="Sélectionnez une ville" required>
     <datalist id="cities_list"></datalist>
 
@@ -45,7 +45,7 @@
   <div id="resultat"></div>
 
   <script>
-    // 1. Autocomplétion pour "Adresse actuelle" (limité aux adresses en France)
+    // 1. Autocomplétion pour "Adresse actuelle" (France uniquement)
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
       {
@@ -65,7 +65,6 @@
         for (var i = 0; i < place.address_components.length; i++) {
           var component = place.address_components[i];
           var types = component.types;
-
           if (types.indexOf('street_number') > -1) {
             streetNumber = component.long_name;
           }
@@ -81,37 +80,36 @@
         }
       }
       
-      // Reconstruction de l'adresse avec uniquement le numéro et la rue
       var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
       document.getElementById('ville_actuelle').value = city;
     });
 
-    // 2. Geocoder pour récupérer les villes associées au CP lieu de construction
+    // 2. Recherche de villes pour le CP lieu de construction
     var geocoder = new google.maps.Geocoder();
 
-    // Lorsque le champ "CP lieu de construction" contient 5 chiffres, lance la recherche
+    // Déclenche la recherche quand le champ contient 5 chiffres
     document.getElementById('cp_construction').addEventListener('input', function() {
       var cp = this.value.trim();
+      console.log("CP saisi :", cp);
       if (cp.length === 5) {
-        // Utilisation de "components" pour filtrer par code postal et pays
         geocoder.geocode({ 
           components: { postal_code: cp, country: 'FR' }
         }, function(results, status) {
+          console.log("Status Geocoder :", status);
+          console.log("Résultats Geocoder :", results);
           if (status === google.maps.GeocoderStatus.OK && results.length > 0) {
             var cities = new Set();
             results.forEach(function(result) {
               result.address_components.forEach(function(component) {
-                // On récupère les composantes correspondant à "locality", "postal_town" ou "administrative_area_level_2"
-                if (component.types.indexOf('locality') > -1 ||
-                    component.types.indexOf('postal_town') > -1 ||
+                if (component.types.indexOf('locality') > -1 || 
+                    component.types.indexOf('postal_town') > -1 || 
                     component.types.indexOf('administrative_area_level_2') > -1) {
                   cities.add(component.long_name);
                 }
               });
             });
-            // Mise à jour du datalist
             var dataList = document.getElementById('cities_list');
             dataList.innerHTML = "";
             if (cities.size === 0) {
@@ -126,7 +124,7 @@
               });
             }
           } else {
-            console.error("Aucun résultat trouvé pour le CP '" + cp + "' - Status: " + status);
+            console.error("Aucun résultat trouvé pour le CP '" + cp + "' - Status:", status);
           }
         });
       }
