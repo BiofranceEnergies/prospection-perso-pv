@@ -43,10 +43,13 @@
   <div id="resultat"></div>
 
   <script>
-    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle"
+    // Initialisation de l'autocomplétion pour le champ "adresse_actuelle" en limitant aux adresses en France
     var autocomplete = new google.maps.places.Autocomplete(
       document.getElementById('adresse_actuelle'),
-      { types: ['geocode'] }
+      {
+        types: ['geocode'],
+        componentRestrictions: { country: 'fr' }
+      }
     );
 
     autocomplete.addListener('place_changed', function() {
@@ -57,7 +60,6 @@
       var city = "";
 
       if (place.address_components) {
-        // Parcours des composants pour extraire les informations désirées
         for (var i = 0; i < place.address_components.length; i++) {
           var component = place.address_components[i];
           var types = component.types;
@@ -77,7 +79,7 @@
         }
       }
       
-      // Reconstitution de l'adresse uniquement avec le numéro et la rue
+      // Reconstruction de l'adresse uniquement avec le numéro et la rue
       var formattedAddress = (streetNumber ? streetNumber + " " : "") + route;
       document.getElementById('adresse_actuelle').value = formattedAddress.trim();
       document.getElementById('cp_actuel').value = postalCode;
