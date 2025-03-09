@@ -41,7 +41,6 @@
   <div id="resultat"></div>
 
   <script>
-    // Remplacez cette URL par celle générée lors du déploiement de votre Apps Script (sans point-virgule à la fin)
     const scriptURL = "https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec";
 
     document.getElementById('crmForm').addEventListener('submit', function(e) {
@@ -59,14 +58,13 @@
 
       fetch(scriptURL, {
         method: 'POST',
-        mode: 'cors',
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       })
-      .then(response => response.json())
-      .then(response => {
+      .then(() => {
         document.getElementById('resultat').innerHTML = "Données envoyées avec succès !";
         document.getElementById('crmForm').reset();
       })
