@@ -78,7 +78,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Formulaire CRM 7</h1>
+    <h1>Formulaire CRM 8</h1>
     <form id="crmForm">
       <label for="nom">Nom :</label>
       <input type="text" id="nom" name="nom" required>
@@ -139,26 +139,23 @@
       });
     }
 
-    document.getElementById("cp_construction").addEventListener("input", function() {
-      let cp = this.value;
-      if (cp.length === 5) {
-        fetch(`https://geo.api.gouv.fr/communes?codePostal=${cp}&fields=nom&format=json`)
-          .then(response => response.json())
-          .then(data => {
-            let suggestionsDiv = document.getElementById("suggestions");
-            suggestionsDiv.innerHTML = "";
-            data.forEach(commune => {
-              let div = document.createElement("div");
-              div.textContent = commune.nom;
-              div.classList.add("autocomplete-suggestion");
-              div.addEventListener("click", function() {
-                document.getElementById("ville_construction").value = this.textContent;
-                suggestionsDiv.innerHTML = "";
-              });
-              suggestionsDiv.appendChild(div);
-            });
-          });
-      }
+    document.getElementById("crmForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      let formData = new FormData(this);
+
+      fetch("https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec", {
+        method: "POST",
+        mode: "no-cors", 
+        body: formData
+      })
+      .then(() => {
+        document.getElementById("resultat").innerHTML = "Données envoyées avec succès !";
+        document.getElementById("crmForm").reset();
+      })
+      .catch(error => {
+        document.getElementById("resultat").innerHTML = "Erreur lors de l'envoi : " + error;
+      });
     });
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPz59eSA-UkT2AzlQzXslwzt8V5uftFzM&libraries=places&callback=initAutocomplete" async defer></script>
