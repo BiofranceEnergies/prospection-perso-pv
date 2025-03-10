@@ -15,7 +15,7 @@
   </style>
 </head>
 <body>
-  <h1>Formulaire CRM 3</h1>
+  <h1>Formulaire CRM 4</h1>
   <form id="crmForm">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
@@ -54,22 +54,23 @@
         if (!place.address_components) return;
 
         let rue = "";
+        let numero = "";
         let cp = "";
         let ville = "";
 
         place.address_components.forEach(component => {
-          if (component.types.includes("route")) {
-            rue = component.long_name; 
-          } else if (component.types.includes("street_number")) {
-            rue = component.long_name + " " + rue; 
+          if (component.types.includes("street_number")) {
+            numero = component.long_name; // 🔢 Numéro de rue
+          } else if (component.types.includes("route")) {
+            rue = component.long_name; // 🏠 Nom de la rue
           } else if (component.types.includes("postal_code")) {
-            cp = component.long_name; 
+            cp = component.long_name; // 📌 Code postal
           } else if (component.types.includes("locality")) {
-            ville = component.long_name; 
+            ville = component.long_name; // 🏙️ Ville
           }
         });
 
-        document.getElementById("adresse_actuelle").value = rue; 
+        document.getElementById("adresse_actuelle").value = numero + " " + rue; // 🔢 Ajoute numéro + rue
         document.getElementById("cp_actuel").value = cp;
         document.getElementById("ville_actuelle").value = ville;
       });
