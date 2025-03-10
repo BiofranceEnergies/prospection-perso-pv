@@ -15,7 +15,7 @@
   </style>
 </head>
 <body>
-  <h1>Formulaire Prospection perso PV</h1>
+  <h1>Formulaire CRM</h1>
   <form id="crmForm">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
@@ -90,14 +90,28 @@
 
     document.getElementById("crmForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      let formData = new FormData(this);
       
+      let data = {
+        nom: document.getElementById("nom").value,
+        adresse_actuelle: document.getElementById("adresse_actuelle").value,
+        cp_actuel: document.getElementById("cp_actuel").value,
+        ville_actuelle: document.getElementById("ville_actuelle").value,
+        cp_construction: document.getElementById("cp_construction").value,
+        ville_construction: document.getElementById("ville_construction").value,
+        surface: document.getElementById("surface").value
+      };
+
+      console.log("Données envoyées :", data); // 🚨 Vérifie si "adresse_actuelle" apparaît ici
+
       fetch("https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec", {
         method: "POST",
-        mode: "no-cors",
-        body: formData
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
       })
-      .then(() => {
+      .then(response => response.text())
+      .then(result => {
         document.getElementById("resultat").innerHTML = "Données envoyées avec succès !";
         document.getElementById("crmForm").reset();
       })
