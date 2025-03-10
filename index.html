@@ -94,10 +94,10 @@
       
       fetch("https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec", {
         method: "POST",
+        mode: "no-cors",
         body: formData
       })
-      .then(response => response.text())
-      .then(result => {
+      .then(() => {
         document.getElementById("resultat").innerHTML = "Données envoyées avec succès !";
         document.getElementById("crmForm").reset();
       })
