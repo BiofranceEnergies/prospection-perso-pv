@@ -2,20 +2,23 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CRM avec Google Sheets</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    form { margin-top: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
+    h1 { text-align: center; }
+    form { max-width: 100%; width: 100%; margin: auto; padding: 10px; }
     label { display: block; margin: 10px 0 5px; }
-    input { padding: 5px; width: 300px; }
-    button { padding: 8px 12px; margin-top: 10px; }
-    .autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; width: 300px; }
+    input { padding: 10px; width: 100%; box-sizing: border-box; }
+    button { padding: 12px; margin-top: 10px; width: 100%; background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; width: 100%; }
     .autocomplete-suggestion { padding: 8px; cursor: pointer; }
     .autocomplete-suggestion:hover { background: #f0f0f0; }
   </style>
 </head>
 <body>
-  <h1>Formulaire CRM 10</h1>
+  <h1>Formulaire CRM 11</h1>
   <form id="crmForm">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" required>
@@ -53,24 +56,15 @@
         let place = autocomplete.getPlace();
         if (!place.address_components) return;
 
-        let rue = "";
-        let numero = "";
-        let cp = "";
-        let ville = "";
-
+        let rue = "", numero = "", cp = "", ville = "";
         place.address_components.forEach(component => {
-          if (component.types.includes("street_number")) {
-            numero = component.long_name; // 🔢 Numéro de rue
-          } else if (component.types.includes("route")) {
-            rue = component.long_name; // 🏠 Nom de la rue
-          } else if (component.types.includes("postal_code")) {
-            cp = component.long_name; // 📌 Code postal
-          } else if (component.types.includes("locality")) {
-            ville = component.long_name; // 🏙️ Ville
-          }
+          if (component.types.includes("street_number")) numero = component.long_name;
+          else if (component.types.includes("route")) rue = component.long_name;
+          else if (component.types.includes("postal_code")) cp = component.long_name;
+          else if (component.types.includes("locality")) ville = component.long_name;
         });
 
-        document.getElementById("adresse_actuelle").value = numero + " " + rue; // 🔢 Ajoute numéro + rue
+        document.getElementById("adresse_actuelle").value = numero + " " + rue;
         document.getElementById("cp_actuel").value = cp;
         document.getElementById("ville_actuelle").value = ville;
       });
@@ -100,7 +94,6 @@
 
     document.getElementById("crmForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      
       let formData = new FormData(this);
 
       fetch("https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec", {
