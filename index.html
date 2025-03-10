@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>CRM avec Google Sheets</title>
+  <title>CRM avec Google Sheets2</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     form { margin-top: 20px; }
@@ -91,27 +91,14 @@
     document.getElementById("crmForm").addEventListener("submit", function(e) {
       e.preventDefault();
       
-      let data = {
-        nom: document.getElementById("nom").value,
-        adresse_actuelle: document.getElementById("adresse_actuelle").value,
-        cp_actuel: document.getElementById("cp_actuel").value,
-        ville_actuelle: document.getElementById("ville_actuelle").value,
-        cp_construction: document.getElementById("cp_construction").value,
-        ville_construction: document.getElementById("ville_construction").value,
-        surface: document.getElementById("surface").value
-      };
-
-      console.log("Données envoyées :", data); // 🚨 Vérifie si "adresse_actuelle" apparaît ici
+      let formData = new FormData(this);
 
       fetch("https://script.google.com/macros/s/AKfycbzoVE-OMg4tIWEaR0NcrkEAVjK8nsRHLrGAZrB3ZdBXMNG-DDkMeDpyynQBt5BffYOCfA/exec", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
+        mode: "no-cors", // 🚀 Remis "no-cors" pour éviter les blocages CORS
+        body: formData
       })
-      .then(response => response.text())
-      .then(result => {
+      .then(() => {
         document.getElementById("resultat").innerHTML = "Données envoyées avec succès !";
         document.getElementById("crmForm").reset();
       })
